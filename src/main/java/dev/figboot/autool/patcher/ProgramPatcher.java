@@ -75,8 +75,6 @@ public class ProgramPatcher {
 
         try {
             JarFile jf = new JarFile(finalFile);
-            Agent.addSystemClassLoaderJar(jf, finalFile);
-
             String mainClass;
             if (props.getMainClass() != null) {
                 mainClass = props.getMainClass();
@@ -88,7 +86,7 @@ public class ProgramPatcher {
                 throw new RuntimeException("A main class could not be selected, please nag the developer.");
             }
 
-            Class<?> clazz = Class.forName(mainClass);
+            Class<?> clazz = Agent.loadClassFromJar(jf, finalFile, mainClass);
             return clazz.getDeclaredMethod("main", String[].class);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
