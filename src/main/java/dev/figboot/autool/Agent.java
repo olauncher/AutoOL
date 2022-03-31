@@ -19,7 +19,6 @@
 package dev.figboot.autool;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -38,7 +37,7 @@ public class Agent {
         Agent.inst = inst;
     }
 
-    public static void addSystemClassLoaderJar(File file) {
+    public static void addSystemClassLoaderJar(JarFile jarFile, File file) {
         if (inst == null) {
             try {
                 URLClassLoader ucl = (URLClassLoader)ClassLoader.getSystemClassLoader();
@@ -55,9 +54,7 @@ public class Agent {
             }
         } else {
             try {
-                inst.appendToSystemClassLoaderSearch(new JarFile(file));
-            } catch (IOException ex) {
-                throw new RuntimeException("Error loading the jar file", ex);
+                inst.appendToSystemClassLoaderSearch(jarFile);
             } finally {
                 inst = null;
             }

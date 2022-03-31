@@ -46,6 +46,8 @@ public class PatchProperties {
 
     @Getter private boolean interactive;
 
+    @Getter private String mainClass;
+
     public PatchProperties() throws IOException {
         properties = new Properties();
         properties.load(getClass().getResourceAsStream(CONFIG_RES));
@@ -122,5 +124,10 @@ public class PatchProperties {
         if (prop != null) {
             this.interactive = prop.equalsIgnoreCase("true");
         }
+    }
+
+    @ConfigMethod
+    private void mainclass(String mainclass) {
+        this.mainClass = mainclass;
     }
 }

@@ -19,7 +19,6 @@
 package dev.figboot.autool.patcher;
 
 import dev.figboot.autool.Agent;
-import dev.figboot.autool.AutoOL;
 import dev.figboot.autool.config.PatchProperties;
 import dev.figboot.autool.ui.ProgressUpdater;
 import dev.figboot.autool.util.CountedInputStream;
@@ -35,8 +34,6 @@ import org.apache.commons.io.IOUtils;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.Proxy;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
@@ -77,11 +74,22 @@ public class ProgramPatcher {
         progress.changeStatus("Loading patched file...");
 
         try {
-            Agent.addSystemClassLoaderJar(finalFile);
+            JarFile jf = new JarFile(finalFile);
+            Agent.addSystemClassLoaderJar(jf, finalFile);
 
-            Class<?> clazz = Class.forName("net.minecraft.launcher.Main");
-            Method method = clazz.getDeclaredMethod("main", String[].class);
-            return method;
+            String mainClass;
+            if (props.getMainClass() != null) {
+                mainClass = props.getMainClass();
+            } else {
+                mainClass = jf.getManifest().getMainAttributes().getValue("Main-Class");
+            }
+
+            if (mainClass == null) {
+                throw new RuntimeException("A main class could not be selected, please nag the developer.");
+            }
+
+            Class<?> clazz = Class.forName(mainClass);
+            return clazz.getDeclaredMethod("main", String[].class);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
