@@ -26,15 +26,24 @@ public class CountedInputStream extends InputStream {
 
     private final Object countLock = new Object();
     private long count;
+    private long markCount;
+    private int markReadLimit;
 
     public CountedInputStream(InputStream parent) {
         this.parent = parent;
         count = 0;
+        markCount = 0;
+        markReadLimit = 0;
     }
 
     protected void incCount(long l) {
         synchronized (countLock) {
             count += l;
+            // If the stream supports marks and there is a mark in place and the markReadLimit has been exceeded...
+            if (markSupported() && markReadLimit > 0 && count - markCount > markReadLimit) {
+                markReadLimit = 0;
+                markCount = 0;
+            }
         }
     }
 
@@ -44,7 +53,13 @@ public class CountedInputStream extends InputStream {
         }
     }
 
-    public long resetCount() {
+    protected void resetCount() {
+        synchronized (countLock) {
+            count = markCount;
+        }
+    }
+
+    public long getCountAndReset() {
         synchronized (countLock) {
             long temp = count;
             count = 0;
@@ -54,17 +69,23 @@ public class CountedInputStream extends InputStream {
 
     @Override
     public int read(byte[] b) throws IOException {
-        return parent.read(b);
+        int res = parent.read(b);
+        incCount(res);
+        return res;
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        return parent.read(b, off, len);
+        int res = parent.read(b, off, len);
+        incCount(res);
+        return res;
     }
 
     @Override
     public long skip(long n) throws IOException {
-        return parent.skip(n);
+        long res = parent.skip(n);
+        incCount(res);
+        return res;
     }
 
     @Override
@@ -79,11 +100,17 @@ public class CountedInputStream extends InputStream {
 
     @Override
     public synchronized void mark(int readlimit) {
+        if (markSupported()) {
+            markCount = count;
+            markReadLimit = readlimit;
+        }
+
         parent.mark(readlimit);
     }
 
     @Override
     public synchronized void reset() throws IOException {
+        if (markSupported() && markReadLimit > 0) resetCount();
         parent.reset();
     }
 
@@ -94,6 +121,8 @@ public class CountedInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        return parent.read();
+        int res = parent.read();
+        if (res >= 0) incCount(1L);
+        return res;
     }
 }

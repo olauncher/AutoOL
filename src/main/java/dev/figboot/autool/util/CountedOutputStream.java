@@ -44,7 +44,13 @@ public class CountedOutputStream extends OutputStream {
         }
     }
 
-    public long resetCount() {
+    public void resetCount() {
+        synchronized (countLock) {
+            count = 0;
+        }
+    }
+
+    public long getCountAndReset() {
         synchronized (countLock) {
             long temp = count;
             count = 0;
@@ -55,11 +61,13 @@ public class CountedOutputStream extends OutputStream {
     @Override
     public void write(byte[] b) throws IOException {
         parent.write(b);
+        incCount(b.length);
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
         parent.write(b, off, len);
+        incCount(len);
     }
 
     @Override
@@ -75,5 +83,6 @@ public class CountedOutputStream extends OutputStream {
     @Override
     public void write(int b) throws IOException {
         parent.write(b);
+        incCount(1);
     }
 }
