@@ -20,6 +20,7 @@ package dev.figboot.autool.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Consumer;
 
 public class CountedInputStream extends InputStream {
     private final InputStream parent;
@@ -29,15 +30,26 @@ public class CountedInputStream extends InputStream {
     private long markCount;
     private int markReadLimit;
 
-    public CountedInputStream(InputStream parent) {
+    private final Consumer<Long> postIncCallback;
+
+    public CountedInputStream(InputStream parent, Consumer<Long> postIncCallback) {
         this.parent = parent;
         count = 0;
         markCount = 0;
         markReadLimit = 0;
+
+        this.postIncCallback = postIncCallback;
+    }
+
+    public CountedInputStream(InputStream parent) {
+        this(parent, null);
     }
 
     protected void incCount(long l) {
+        long cpy;
+
         synchronized (countLock) {
+            cpy = count;
             count += l;
             // If the stream supports marks and there is a mark in place and the markReadLimit has been exceeded...
             if (markSupported() && markReadLimit > 0 && count - markCount > markReadLimit) {
@@ -45,6 +57,8 @@ public class CountedInputStream extends InputStream {
                 markCount = 0;
             }
         }
+
+        if (postIncCallback != null) postIncCallback.accept(cpy);
     }
 
     public long getCount() {

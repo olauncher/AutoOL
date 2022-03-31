@@ -46,6 +46,8 @@
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <manifestEntries>
                                 <Main-Class>dev.figboot.autool.AutoOL</Main-Class>
+                                <Premain-Class>dev.figboot.autool.Agent</Premain-Class>
+                                <Launcher-Agent-Class>dev.figboot.autool.Agent</Launcher-Agent-Class>
                             </manifestEntries>
                         </transformer>
                     </transformers>
@@ -57,6 +59,12 @@
                             </excludes>
                         </filter>
                     </filters>
+                    <relocations>
+                        <relocation>
+                            <pattern>org.apache.commons</pattern>
+                            <shadedPattern>autool.org.apache.commons</shadedPattern>
+                        </relocation>
+                    </relocations>
                 </configuration>
                 <executions>
                     <execution>
@@ -85,7 +93,7 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <!-- compiled from https://github.com/malensek/jbsdiff/blob/51b6981d97b4cf386069481707394f37c537b1d5 -->
+            <!-- compiled from https://github.com/malensek/jbsdiff/tree/51b6981d97b4cf386069481707394f37c537b1d5 -->
             <groupId>io.sigpipe</groupId>
             <artifactId>jbsdiff</artifactId>
             <version>1.0</version>
@@ -96,6 +104,12 @@
             <artifactId>lombok</artifactId>
             <version>1.18.22</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

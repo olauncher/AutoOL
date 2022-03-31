@@ -20,6 +20,7 @@ package dev.figboot.autool.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.function.Consumer;
 
 public class CountedOutputStream extends OutputStream {
     private final OutputStream parent;
@@ -27,15 +28,27 @@ public class CountedOutputStream extends OutputStream {
     private final Object countLock = new Object();
     private long count;
 
-    public CountedOutputStream(OutputStream parent) {
+    private final Consumer<Long> postIncCallback;
+
+    public CountedOutputStream(OutputStream parent, Consumer<Long> postIncCallback) {
+        this.postIncCallback = postIncCallback;
         this.parent = parent;
         this.count = 0;
     }
 
+    public CountedOutputStream(OutputStream parent) {
+        this(parent, null);
+    }
+
     protected void incCount(long l) {
+        long cpy;
+
         synchronized (countLock) {
+            cpy = count;
             count += l;
         }
+
+        if (postIncCallback != null) postIncCallback.accept(cpy);
     }
 
     public long getCount() {

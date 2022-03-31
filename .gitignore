@@ -1,3 +1,6 @@
 .idea
 *.iml
 target
+src/main/resources/patch.properties
+src/main/resources/*.patch
+run
