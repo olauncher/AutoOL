@@ -48,7 +48,7 @@ public class SwingProgressUpdater extends JFrame implements ProgressUpdater {
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         mainPanel.add(mainBox);
 
-        statusLabel = new JLabel("Status here :)");
+        statusLabel = new JLabel("Please wait...");
         Box lblBox = Box.createHorizontalBox();
         lblBox.add(statusLabel);
         lblBox.add(Box.createHorizontalGlue());
