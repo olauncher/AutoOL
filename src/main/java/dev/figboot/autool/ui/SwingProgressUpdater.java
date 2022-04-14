@@ -72,6 +72,7 @@ public class SwingProgressUpdater extends JFrame implements ProgressUpdater {
 
         pack();
         setLocationByPlatform(true);
+        setLocationRelativeTo(null);
         setVisible(true);
 
         addWindowListener(new WindowAdapter() {
