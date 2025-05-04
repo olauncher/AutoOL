@@ -1,6 +1,5 @@
 package dev.figboot.autool.patcher;
 
-import dev.figboot.autool.Agent;
 import dev.figboot.autool.config.PatchProperties;
 import dev.figboot.autool.ui.ProgressUpdater;
 import dev.figboot.autool.util.CountedInputStream;
@@ -16,6 +15,8 @@ import org.apache.commons.io.IOUtils;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.Proxy;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
@@ -68,8 +69,9 @@ public class ProgramPatcher {
                 throw new RuntimeException("A main class could not be selected, please nag the developer.");
             }
 
-            Class<?> clazz = Agent.loadClassFromJar(jf, finalFile, mainClass);
-            return clazz.getDeclaredMethod("main", String[].class);
+            return new URLClassLoader(new URL[]{finalFile.toURI().toURL()}, null)
+                    .loadClass(mainClass)
+                    .getDeclaredMethod("main", String[].class);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
