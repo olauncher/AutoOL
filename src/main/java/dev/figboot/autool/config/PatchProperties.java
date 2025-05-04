@@ -6,10 +6,13 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 public class PatchProperties {
+    private static final String SYSTEM_PROPERTY_PREFIX = "sysprop.";
     private static final String CONFIG_RES = "/patch.properties";
 
     private final Properties properties;
@@ -30,6 +33,9 @@ public class PatchProperties {
 
     @Getter private String mainClass;
 
+    private final Map<String, String> systemPropertiesMutable = new HashMap<>();
+    @Getter private final Map<String, String> systemProperties = Collections.unmodifiableMap(systemPropertiesMutable);
+
     public PatchProperties() throws IOException {
         properties = new Properties();
         properties.load(getClass().getResourceAsStream(CONFIG_RES));
@@ -38,14 +44,22 @@ public class PatchProperties {
 
     private void populate() {
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            String keyStr = entry.getKey().toString();
+            if (keyStr.startsWith(SYSTEM_PROPERTY_PREFIX)) {
+                systemPropertiesMutable.put(keyStr.substring(SYSTEM_PROPERTY_PREFIX.length()), entry.getValue().toString());
+                continue;
+            }
+
             try {
-                Method method = getClass().getDeclaredMethod(entry.getKey().toString(), String.class);
+                Method method = getClass().getDeclaredMethod(keyStr, String.class);
 
                 if (method.isAnnotationPresent(ConfigMethod.class)) {
                     method.invoke(this, entry.getValue().toString());
                 } else {
                     System.err.println("Not calling method '" + method.getName() + "', as it is not annotated with @ConfigMethod.");
                 }
+            } catch (NoSuchMethodException ex) {
+                throw new RuntimeException("Invalid patch properties", ex);
             } catch (ReflectiveOperationException ex) {
                 System.err.println("Error while loading patch properties:");
                 ex.printStackTrace();

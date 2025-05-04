@@ -84,6 +84,7 @@ public class AutoOL {
             Thread.currentThread().interrupt();
         }
 
+        System.getProperties().putAll(settings.getSystemProperties());
         return method;
     }
 
